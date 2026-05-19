@@ -1,0 +1,37 @@
+services:
+  database:
+    image: postgres
+    container_name: database
+
+    environment:
+      POSTGRES_USER: homeassistant
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: homeassistant
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./app/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+    restart: unless-stopped
+
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    container_name: homeassistant
+
+    depends_on:
+      - database
+
+    ports:
+      - "8123:8123"
+
+    volumes:
+      - ./config:/config
+      - ./config_temp:/config_temp
+      - ./startup.sh:/startup.sh
+
+    entrypoint: ["/bin/bash", "/startup.sh"]
+
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
